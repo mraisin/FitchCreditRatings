@@ -20,9 +20,10 @@ My literature review indicates that statistical analysis using this economic the
 A government has various ways to raises funds such as taxation, selling assets or debt. Bonds are either denominated in the local currency or a foreign currency. The bond repayments are split into principle and interest payments. The principle is paid at the maturity of the bond with scheduled interest payments. I will be looking at the credit ratings for the issuing of long term securities in the form of 10 year bonds in a sovereign's local currency.
 
 Three broad categories of bonds risks are:
-*Credit Risk
-*Currency Risk
-*Inflation Risk 
+
+* Credit Risk
+* Currency Risk
+* Inflation Risk 
 
 
 Sovereign credit risk is the risk of a government becoming unwilling or unable to meet its debt obligations. A government may have a restructured default (rescheduling of payments) or a full default. The expected value of a loss is proportional to the probability of a default and the amount recovered in the case of a default. Much like a haircut can range from a little off the top, to the [el Greco Kojac](https://www.youtube.com/watch?v=-8hbUqhKM38) ??? ("who loves ya baby?" - no one, you owe us money ). 
@@ -57,6 +58,7 @@ library(ggplot2)
 library(radarchart)
 library(reshape2)
 library(ggrepel)
+library(knitr)
 
 
 ```
@@ -164,40 +166,9 @@ CalculateRollingSD <- function(df, i, j) {
 
 ```
 
-The following table depicts the variables I used based on Fitch's ratings criteria and their sources. I learnt from this assignment, high income nations have fewer reporting requirements making some of the data difficult to obtain. Some sovereigns, such as Argentina, have reported dubious statistics in the past and may of those have now been removed from the databases of organisations such as the World Bank, IMF and the OECD.  Country names need some massaging to link together the various databases with external agencies. I did try to input some of the missing data from the CIA Factbook (an amazing resource that could not be laid out worse) but that made the predictions worse. I assume that the CIA use different formula for calculating their statistics.
+The following table depicts the features I used based on Fitch's ratings criteria and their sources. I learnt from this assignment, high income nations have fewer reporting requirements making some of the data difficult to obtain. Some sovereigns, such as Argentina, have reported dubious statistics in the past and may of those have now been removed from the databases of organisations such as the World Bank, IMF and the OECD.  Country names need some massaging to link together the various databases with external agencies. I did try to input some of the missing data from the CIA Factbook (an amazing resource that could not be laid out worse) but that made the predictions worse. I assume that the CIA use different formula for calculating their statistics.
 
-Variable	Description	Source
-		
-GovDeptGDP	Ratio of Government Debt to GDP	WorldBank/IMF
-RollMeanGovDebt	3 year rolling mean of Government Debt to GDP	Worldbank
-Governance	Simple average of the world banks 
-Control of Corruption: Percentile Rank, CC.PER.RNK
-Government Effectiveness: Percentile Rank, GE.PER.RNK
-Rule of Law: Percentile Rank, RL.PER.RNK
-Voice and Accountability: Percentile Rank, VA.PER.RNK
-Political Stability and Absence of Violence/Terrorism: Percentile Rank, PV.PER.RNK
-Regulatory Quality: Percentile Rank, RQ.PER.RNK
-	WorldBank
-BroadMoney	Measure of total money supply in an economy	WorldBank
-RollGenGovDeficit	3 year rolling average of the Central Governments budgetary Surplus/Deficit.	Worldbank/OECD
-RollMeanChangeCPI	3 year rolling average of the consumer price index measure of inflation	Worldbank
-WorldGDPRank	The rank of world GDP in USD	Worldbank
-WorldGDPLog	Natural log of the rank of world GDP in USD	Worldbank
-NonManMercExports	This is a measure of non-commodity exports. 
-I calculated it by:
-(1 - Manufactures exports (% of merchandise exports) * Merchandise exports (current US$) / GDP	Worldbank
-RollNetForeignAssetsGDP	3 year rolling average of the ratio of net foreign assets to GDP 	Worldbank
-RollCABFDI	3 year rolling average of the Sovereign Current Account Balance plus foreign direct investment	Worldbank/OECD
-ReservesMonthsImports	Currency reserves expressed in months of imports	Worldbank
-RollInterestPaymentsRevenue	3 year rolling average of the ratio of interest payments to government revenue	IMF/OECD
-GDPGrowth	Real GDP growth	IMF
-RealInterestRate	The data for interest rate payments is not freely provided for the high income nations. As a proxy I included the real interest rate.  This is the interest rate accounting for inflation and thus an indicator for risk. Logically, this would be related to the cost of financing for a government.	IMF
-Default	If the country has defaulted in the last 25 years	Wikipedia
-Defaulted	25 - the number of years since a default (0) if no default	Wikipedia
-ReserveCurrrency	A categorical variable of the reserve qualities of the local currency. 3 = High, 2=Med, 1=Low, 0 = None	BIS bis.org
-
-SDGDP	10 year trailing standard deviation of GDP growth	IMF
-
+![Variables](./DATA/Variables.jpg)
 
 It is noteworthy that where possible, Fitch prescribes using ratios I assume to remove currency distortions and facilitate year to year comparisons, failing that currency amounts are standardised to USD. 
 
@@ -205,16 +176,17 @@ One of the criticisms of the sovereign ratings systems is that they are slow to 
 
 Unfortunately, I was unable to get the data for foreign denominated debt for enough countries to be meaningful. This is an important statistic as foreign debt increases risk.
 
-[Variables](./DATA/Variables.jpg)
 
 
-Thank you to the following organisations as we read in the data and wrangle it below
-*The World Bank: Data
-*IMF Data
-*Data Lab: OECD
-*CIA FactBook
-*The Quality of Government Standard Dataset, University of Gothenburg
-*Knoema Open Data Platform
+
+Thank you to the following organisations as we read in the data and wrangle the data below
+
+* The World Bank: Data
+* IMF Data
+* Data Lab: OECD
+* CIA FactBook
+* The Quality of Government Standard Dataset, University of Gothenburg
+* Knoema Open Data Platform
 
 
 
@@ -564,12 +536,6 @@ df_Fitch_Summary <- summary(df_Fitch)
 df_Fitch <- df_Fitch %>%
   select(-RollInterestPayments)
 
-
-#df_Fitch %>%
-#  select(-DT.INT.DECT.CD ) %>% na.omit() %>% summary()
-#df_Fitch %>%
-#  select(-DT.INT.DECT.CD, -NonManMercExports) %>% summary()
-
 df_Fitch <- df_Fitch %>%
   mutate(locallongterm_letter = gsub("\\+","",locallongterm)) %>%
   mutate(locallongterm_letter = gsub("-","",locallongterm_letter)) 
@@ -584,11 +550,9 @@ df_Fitch <- df_Fitch %>%
 
 
 df_FitchReduced <-df_Fitch %>% na.omit() 
-  # select(-DT.INT.DECT.CD ) %>% %>%
-  #mutate(locallongterm_letter = gsub("\\+","",locallongterm)) %>%
-  #mutate(locallongterm_letter = gsub("-","",locallongterm_letter)) 
 
-df_FitchReduced_Summary <- summary(df_Fitch_Reduced)
+
+df_FitchReduced_Summary <- summary(df_FitchReduced)
 strFitchReduced <- str(df_FitchReduced)
 
 ```
@@ -597,20 +561,21 @@ strFitchReduced <- str(df_FitchReduced)
 We can see that their is a lot of missingness when we join all the features together
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-df_FitchReduced_Summary %>% kable()
+df_Fitch_Summary
 ```
 
 After omitting NAs and droping rolling interest payments vaiables
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-df_FitchReduced_Summary %>% kable()
-``
+df_FitchReduced_Summary
+```
 
 
 Visalise this
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+```{r  message=FALSE, warning=FALSE}
 
 
 CreditRatings <- c("AAA",
@@ -635,7 +600,7 @@ CreditRatingsLetter <- c("AAA",
 
 
 
-df_Fitch %>%
+gg_Credit <- df_Fitch %>%
   ggplot( aes(x = locallongterm)) + 
     geom_bar(col="red", 
                  fill="green", 
@@ -645,7 +610,7 @@ df_Fitch %>%
     scale_x_discrete(limits=CreditRatings) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-df_Fitch %>%
+gg_CreditLetter <- df_Fitch %>%
   ggplot( aes(x = locallongterm_letter)) + 
     geom_bar(col="red", 
                  fill="green", 
@@ -659,7 +624,7 @@ prop.table(table(df_Fitch$locallongterm))
 prop.table(table(df_Fitch$locallongterm_letter))
 
 
-df_FitchReduced %>%
+gg_CreditReduced <- df_FitchReduced %>%
   ggplot( aes(x = locallongterm)) + 
     geom_bar(col="red", 
                  fill="green", 
@@ -670,7 +635,7 @@ df_FitchReduced %>%
     theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
-df_FitchReduced %>%
+gg_CreditLetterReduced <- df_FitchReduced %>%
   ggplot( aes(x = locallongterm_letter)) + 
     geom_bar(col="red", 
                  fill="green", 
@@ -693,7 +658,7 @@ map_z <- z %>%
   summarize('Average Credit Rating'=mean(Credit)) %>%
   joinCountryData2Map( joinCode = "ISO3" ,nameJoinColumn = "Country Code")
 mapParams <- mapCountryData(map_z ,nameColumnToPlot='Average Credit Rating', addLegend=FALSE ) 
-do.call( addMapLegend, c(mapParams, legendWidth=0.5, legendMar = 2))
+#do.call( addMapLegend, c(mapParams, legendWidth=0.5, legendMar = 2))
 
 
 
@@ -705,24 +670,51 @@ map_z <- z %>%
   group_by(`Country Code`) %>%
   summarize('Junk Bond Status'=mean(Junk)) %>%
   joinCountryData2Map( joinCode = "ISO3" ,nameJoinColumn = "Country Code")
-mapParams <- mapCountryData(map_z ,nameColumnToPlot='Junk Bond Status', addLegend=FALSE ) 
-do.call( addMapLegend, c(mapParams, legendWidth=0.5, legendMar = 2))
+mapParamsj <- mapCountryData(map_z ,nameColumnToPlot='Junk Bond Status', addLegend=FALSE ) 
+#do.call( addMapLegend, c(mapParamsj, legendWidth=0.5, legendMar = 2))
 
 
 
 ```
 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 
+gg_Credit
 
+```
 
+Notice the dip at BB for the credit ratings. BBB- is the cut off for investment grade 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
+gg_CreditLetter
+
+```
+Now the distortion around BB has disappeared
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+gg_CreditReduced
+gg_CreditReducedLetter
+
+```
+
+The above two diagrams show the distribution of the data minus missingness.  The irony is the AA rated countries share less data openly.
+
+```{r}
+do.call( addMapLegend, c(mapParams, legendWidth=0.5, legendMar = 2))
+do.call( addMapLegend, c(mapParamsj, legendWidth=0.5, legendMar = 2))
+```
+
+There is a clear divide around the world between South America, Africa, Asia Mnor and the former USSR compared to North America, Western Europe and Australiasia. With the former largerly considered non investment grade (Junk). Without access low yeild bonds (cheap finance) how do these countries fund capital expenditures to develop? 
+
+```{r message=FALSE, warning=FALSE}
+
 
 y <- EncodeRating(df_FitchReduced[,6])
-
 X <- as.matrix(df_FitchReduced[,9:27])
 
+#Scale and Centre
 maxs <- apply(X, 2, max)
 mins <- apply(X, 2, min)
 X <- scale(X, center = mins, scale = maxs - mins)
@@ -730,13 +722,12 @@ summary(X)
 
 
 melted_X <- melt(cor(X))
-ggplot(data = melted_X, aes(x=Var1, y=Var2, fill=value)) + 
+gg_cor <- ggplot(data = melted_X, aes(x=Var1, y=Var2, fill=value)) + 
   geom_tile() +
   scale_fill_gradient(aes(fill = value), low = "white",high = "steelblue") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
-# Add angle to text
 
 pca <- prcomp(X, center=FALSE, scale=FALSE)
 summary(pca)$importance[,1:16]
@@ -744,7 +735,7 @@ summary(pca)$importance[,1:16]
 #Code shamelessly stolen from class
 v_Rating = df_FitchReduced$locallongterm
 tmp <- data.frame(pca$rotation, name = colnames(X)) 
-tmp %>%  ggplot(aes(PC1, PC2)) + geom_point() + 
+gg_PCA1PCA2 <- tmp %>%  ggplot(aes(PC1, PC2)) + geom_point() + 
   geom_text_repel(aes(PC1, PC2, label=name),
                   data = filter(tmp, 
                                 PC1 < -0.1 | PC1 >0.1 | PC2 < -0.15 | PC2>0.0))
@@ -755,6 +746,17 @@ tmp %>%  ggplot(aes(PC1, PC2)) + geom_point() +
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+gg_cor
+gg_PCA1PCA2
+
+```
+
+The ratings are an ordinal categorical variable.  I chose root squared mean error (RSME) as the evaluation metric as it is simple and gives extra cost for being further away from the truth. I chose to round the predictions as I am considering the ability of machine learning to replace experts to create actual ratings.  I  acknowledge that the distances between the various ratings may or may not be uniform.
+
+The three algorithms that I  tested for efficacy are linear regression, k-nearest neighbour and gradient boosted trees as per the XGBoost library. Firstly, I scaled all the variables to a 0-1 scale thus giving equal to each for the distance calculations of kNN. I  trained the algorithms on a subset of the data then tested there efficaing on a spearate test subset. After testing the efficacy of each algorithm I blended the predictions with the goal to reduce variation. 
+
+
+```{r message=FALSE, warning=FALSE}
 
 set.seed(28070)
 df_model <- cbind(as.data.frame(y),as.data.frame(X))
@@ -821,17 +823,30 @@ y_e <- round((yhat_xgb_test*3 + yhat_lm_test*2 + yhat_knn_test*1)/6)
 df_Ensemble <- rbind(df_Ensemble, c(3,2,1, signif(RMSE(y_e,df_model_test[,1]),3)))
 colnames(df_Ensemble) <- c("Prop XGB", "Prop Reg", "Prop kNN", "  RMSE  ")
 
+df_Ensemble
+
 ```
 
+When we blended the algorithms predictions we reduced the mean square error to aproximately one. This means that on average with the machine learning our prediction were within one notch of the offical Fitch rating. That is, if the prediction was BBB then on average the prediction would be within BB+ to BB-.
 
 ```{r}
 xgb.plot.importance(importance_matrix[1:10,])
 ```
 
+The gradient boosted tree algorithm has the best predictive power. When we consider the consider the gain for each of the variables we can see that the Governance feature has the highest gain. The Governance indicator is the average of the percentile rank for six indicators: 
+
+*  Control of Corruption
+*  Government Effectiveness
+*  Rule of Law: Percentile Rank
+*  Voice and Accountability
+*  Political Stability and Absence of Violence/Terrorism
+*  Regulatory Quality
+
+To get a better understanding of governance we can break down that composite variable into it individual components and run a regression analysis.  
 
 
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE}
 
 df_FitchGovernance <- df_WGI %>% select(CC.PER.RNK, GE.PER.RNK,  RL.PER.RNK, VA.PER.RNK, PV.PER.RNK, RQ.PER.RNK, Year, Country) %>%
   right_join(df_FitchReduced) %>%
@@ -840,7 +855,7 @@ df_FitchGovernance <- df_WGI %>% select(CC.PER.RNK, GE.PER.RNK,  RL.PER.RNK, VA.
 #df_FitchGovernance<-df_FitchGovernance[,9:dim(df_FitchGovernance)[2]]
 
 model_lm_governance <- lm(y ~ ., data = df_FitchGovernance)
-summary(model_lm_governance)
+
 
 Junk = 9.5
 
@@ -872,13 +887,30 @@ Prime <- as.numeric(df_FitchGovernance %>% filter(y == 1) %>%
             PoliticalStabilityAbsenceViolence = mean(PV.PER.RNK),
             RegulatoryQuality=mean(RQ.PER.RNK) ) )
 scores = list( "Junk" = Junk, "Investment" = Investment, "Prime" = Prime)
-  chartJSRadar(scores, labs)
 
+ 
 
 
 
 
 ```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(model_lm_governance)
+```
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ chartJSRadar(scores, labs)
+```
+
+
+
+
+
+
 
 
 
