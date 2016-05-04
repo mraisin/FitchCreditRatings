@@ -1,7 +1,7 @@
 ---
-title: "Final Project"
+title: "Final Project: Predicting Sovereign Credit Ratings"
 author: "Matthew Raisin"
-date: "20 April 2016"
+date: "4 May 2016"
 output: html_document
 ---
 
@@ -9,8 +9,7 @@ output: html_document
 
 In this project I will investigate reverse engineering the method that the Fitch Credit Rating Agency uses to create their Sovereign Credit Ratings. After analysis of the relevant variables I will use various machine learning techniques to allow the data to tell the story. My motivation includes an interest in the almost commoditisation and disintermediation of traditionally specialised analysis, through the availability of open data and the widespread availability of sophisticated computing power. This process will also allow me to explore this idea using Linear regression, k-nearest neighbour, gradient boosted trees and ensembling. 
 
-During the GFC in 2007, Australia managed to maintain its AAA credit rating and used this to guaranty the deposits in our banks. This was very important to the maintenance of the Australian economy through ensuring the availability of low yield foreign lending. 
-However, Mr Jolly, head of research for one of the big for banks in Australia, wrote a recent report stating that Australia faces an upcoming Federal election with Commonwealth debt already "pushing against ratings agencies' AAA boundary". The risk to Australia of a reduction in its credit rating would be associated with increased cost to finance Governmental operations through bonds. However, how does a country maintain her credit rating when the exact method of calculation is unknown? 
+During the GFC in 2007, Australia managed to maintain its AAA credit rating and used this to guarantee the deposits in our banks. This was very important to the maintenance of the Australian economy through ensuring the availability of low yield foreign lending. However, the head of research for one of the big for banks in Australia wrote a recent report stating that Australia faces an upcoming Federal election with Commonwealth debt already "pushing against ratings agencies' AAA boundary". The risk to Australia of a reduction in its credit rating would be associated with increased cost to finance Governmental operations through bonds. In relating this to my investigation, are there insights that can be drawn from the method of calculating credit risks that can help Australia maintain her credit rating? Moreover, can these insights be applied to 
 
 My literature review indicates that statistical analysis using this economic theory was performed for S&P and Moody ratings in 1996 and later for the Big Three in 2007. In this project I will update this research for Fitch with new data and complement it by utilising machine learning.
 
@@ -172,7 +171,7 @@ The following table depicts the features I used based on Fitch's ratings criteri
 
 ![Variables](./DATA/Variables.jpg)
 
-It is noteworthy that where possible, Fitch prescribes using ratios I assume to remove currency distortions and facilitate year to year comparisons, failing that currency amounts are standardised to USD. 
+It is noteworthy that where possible, Fitch prescribes using ratios, failing that currency amounts are standardised to USD. I proffer this is to remove currency distortions and facilitate year to year comparisons.
 
 One of the criticisms of the sovereign ratings systems is that they are slow to respond then overcorrect. To account for the normal business cycle (ups and downs) many of the variables use smoothing. This creates a lagging effect to structural changes and may expain why the ratings are slow to respond. 
 
@@ -193,6 +192,11 @@ Thank you to the following platforms/open datasets as we read and wrangle the da
 
 ```{r  message=FALSE, warning=FALSE}
 
+#####################################################################
+#
+#                   READ DATA
+#
+#####################################################################
 
 setwd("./DATA/")
 df_Fitch <- read_csv("fitch.csv")
@@ -219,8 +223,12 @@ df_GovGrossDeptGDP <- read_csv("GovGrossDebtGDP.csv")
 df_RealInterestRate <- read_csv("RealInterestRate.csv")
 df_CountyCodes <- read_csv("Countries.csv")
 
+#####################################################################
+#
+#                  SETUP VECTORS/VARIABLES
+#
+#####################################################################
 
-#Set up variables
 v_Country <- df_Fitch %>% select(Country) %>% distinct()
 v_GovernanceIndicators <- c("CC.PER.RNK","GE.PER.RNK","RL.PER.RNK","VA.PER.RNK","PV.PER.RNK","RQ.PER.RNK")
 v_ReserveCurrency3 <- c("Japan", "USA", "Euro", "Germany")
@@ -228,6 +236,11 @@ v_ReserveCurrency3_Post1999 <- c("Austria", "Belgium", "Cyprus", "Estonia", "Fin
 v_ReserveCurrency2 <- c("Australia", "Switzerland")
 v_ReserveCurrency1 <- c("Sweden", "Canada", "New Zealand", "Denmark")
 
+#####################################################################
+#
+#                    DATA WRANGLING
+#
+#####################################################################
 
 ###################################CountryCodesNames/
 df_CountyCodes <- df_CountyCodes %>% rename(Country = `Country Name`)
@@ -301,8 +314,7 @@ df_GovDebt <-  df_GovDebt %>%
   group_by(Country) %>%
              mutate(RollMeanGovDebt = 
               (lag(GC.DOD.TOTL.GD.ZS)+lag(GC.DOD.TOTL.GD.ZS,2)+ GC.DOD.TOTL.GD.ZS) /3) %>%        mutate(RollMeanGovDebt = ifelse(is.na(RollMeanGovDebt), GC.DOD.TOTL.GD.ZS, RollMeanGovDebt)) %>%
-#  select(-GC.DOD.TOTL.GD.ZS) %>%
-  ungroup()
+ ungroup()
 ###################################/gross general government debt
 
 ###################################general government (budget) balance (% of GDP)/
@@ -342,19 +354,13 @@ df_InterestPaymentsRevenue <- df_InterestPaymentsRevenue %>%
 ###################################NonManufacturedMerchandiseExports/
 df_MerchandiseExports <- TidyUpWorldBank(df_MerchandiseExports)
 df_ManufacturesExports <- TidyUpWorldBank(df_ManufacturesExports)
-#df_CXR3 <- df_WDI %>%
-#  select(Country, Year, BX.GSR.GNFS.CD)  %>% 
-#  filter(!is.na(BX.GSR.GNFS.CD))
 
 df_CXR2 <- read_csv("CurrentAccountReceipts.csv")
 df_CXR2 <- TidyUpWorldBank(df_CXR2)
 df_CXR2 <- df_CXR2 %>%
   select(Country, Year, BX.GSR.FCTY.CD)  %>% 
   filter(!is.na(BX.GSR.FCTY.CD))
-
 df_CXR <- df_CXR2
-
-
 
 df_NonManMercExports <- df_MerchandiseExports %>% left_join(df_ManufacturesExports) %>%
   mutate(NonManMercExports = (1-TX.VAL.MANF.ZS.UN/100) * TX.VAL.MRCH.CD.WT) %>%
@@ -435,17 +441,8 @@ df_RealInterestRate <- df_RealInterestRate %>%
   mutate(Year = year(as.Date(Year, "%d/%m/%Y")))
 #####################################/Real Interest Rates
 
-#STD DEV REAL GDP
-
 
 #####################################CPI/  
-#v_CPI <- as.character(seq(1990, 2012, 1))
-#df_CPI <- bind_cols(df_CPI[,1:4],df_CPI[,v_CPI])        
-#df_CPI <- df_CPI %>%
-#  filter(`Indicator Code` == "PCPI_PC_CP_A_PT") 
-#df_CPI <- TidyUpWorldBank(df_CPI)
-
-
 df_CPI <- df_CPI %>%
   mutate(Year = year(as.Date(Year, "%d/%m/%Y")))
 df_CPI <- df_CPI %>% arrange(Country,Year)   %>%
@@ -460,8 +457,12 @@ df_CPI <- df_CPI %>% arrange(Country,Year)   %>%
   ungroup()
 #####################################/CPI
 
-
-#Time to join explanatory variables
+#####################################################################
+#
+#                   JOIN THE FEATURES INTO SINGLE DATAFRAME
+#
+#####################################################################
+#
 
 df_Fitch <- df_Fitch %>%
   mutate(Year = year(as.Date(Date, "%d/%m/%Y")))
@@ -481,8 +482,6 @@ df_Fitch <- df_Fitch %>%
   left_join(df_CPI)
 df_Fitch <- df_Fitch %>%
   left_join(df_WorldGDP) 
-#df_Fitch <- df_Fitch %>%
-#  left_join(df_GovDeptRoll)
 df_Fitch <- df_Fitch %>%
   left_join(df_NonManMercExports)
 df_Fitch <- df_Fitch %>%
@@ -541,8 +540,13 @@ df_Fitch <- df_Fitch %>%
   mutate(locallongterm_letter = gsub("\\+","",locallongterm)) %>%
   mutate(locallongterm_letter = gsub("-","",locallongterm_letter)) 
 
-
 write_csv(df_Fitch, "df_Fitch.csv")
+
+#####################################################################
+#
+#                 FILTER DATAFRAME
+#
+#####################################################################
 
 ####Remove non rated entries and defaults
 df_Fitch <- df_Fitch %>%
@@ -559,14 +563,14 @@ df_FitchReduced_Summary <- summary(df_FitchReduced)
 ```
 
 
-The dataset has multiple entries for each country. There is likely to be serial autocorrelation correlation within the data.
+The dataset has multiple entries for each country. There is may be serial autocorrelation correlation within the data. A countries previous rating will almost certainly be correlated with their following rating.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 df_Fitch %>% group_by(Country) %>% summarise(n())
 ```
 
 
-We can see that their is a lot of missingness when we join all the features together. 
+We can see that their is a lot of missingness when we join all the features together. I attempted to impute the data from other sources but it reduced the accuracy of the models. As such, I decided to drop the observations with missing data.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 df_Fitch_Summary
@@ -574,7 +578,7 @@ df_Fitch_Summary
 
 ```
 
-After omitting NAs and droping rolling interest payments vaiables we still have 311 observations to train our machine learning algorithms.
+After dropping rolling interest paymentsand omitting NAs and vaiables we still have 311 observations to train our machine learning algorithms. 
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -582,10 +586,16 @@ df_FitchReduced_Summary
 ```
 
 
-Visalise this
 
 
 ```{r  message=FALSE, warning=FALSE}
+
+#####################################################################
+#
+#                EXPLORITORY ANALYSIS
+#
+#####################################################################
+
 CreditRatings <- c("AAA",
                    "AA+", "AA",
                    "A+","A","A-",
@@ -606,7 +616,6 @@ CreditRatingsLetter <- c("AAA",
                    "CC","C","DDD",
                    "RD")
 
-
 gg_Credit <- df_Fitch %>%
   ggplot( aes(x = locallongterm)) + 
     geom_bar(col="red", 
@@ -626,8 +635,6 @@ gg_CreditLetter <- df_Fitch %>%
     labs(x="Rating", y="Count") +
     scale_x_discrete(limits=CreditRatingsLetter) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
-
 
 
 gg_CreditReduced <- df_FitchReduced %>%
@@ -704,7 +711,7 @@ gg_CreditLetterReduced
 
 ```
 
-The above two diagrams show the distribution of the data minus missingness.  The irony is the AA rated countries share less open data. This decline in observations in the AA grade is mostly attrubutable to the AA and AA+ rated countries. 
+The above two diagrams show the distribution of the data minus missingness.  The irony is the AA rated countries share less open data. This decline in observations in the AA grade is mostly attrubutable to the AA and AA+ rated countries. The were also a significant number of AAA countries that I did not have the complete data. 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 cat("Proportion Table of Full Dataset by Rating")
@@ -730,7 +737,10 @@ do.call( addMapLegend, c(mapParamsj, legendWidth=0.5, legendMar = 2))
 
 There is a clear divide around the world between South America, North Africa, Indian Subcontinent and the former USSR compared to North America, Western Europe and Australaisia. With the former largerly considered non investment grade (Junk). Without access low yeild bonds (cheap finance) how do these countries fund capital expenditures to develop? 
 
-There may well be continental cluster effects within the data. Subject to more time I would add a categorical variable to control for these effects.    
+There may well be continental cluster effects within the data. Subject to more time I would add a categorical variable to control for these effects.
+
+Next I scaled and centered all the features to 0-1 scale. This facilitated unbiased distance calculations and comparisons of coefficents in a regression.
+
 
 ```{r message=FALSE, warning=FALSE}
 
@@ -792,6 +802,13 @@ The three algorithms that I  tested for efficacy are linear regression, k-neares
 
 ```{r message=FALSE, warning=FALSE}
 
+#####################################################################
+#
+#                 BUILD MODELS
+#
+#####################################################################
+
+
 set.seed(28070)
 df_model <- cbind(as.data.frame(y),as.data.frame(X))
 df_model_train <- df_model %>% sample_frac(0.8, replace = FALSE) 
@@ -801,6 +818,18 @@ model.lm <- lm(locallongterm ~ ., data = df_model_train)
 summary(model.lm)
 yhat_lm_train <- predict(model.lm)
 yhat_lm_test <- predict(model.lm, newdata = df_model_test)
+res_lm_train <- residuals(model.lm)
+
+#Residuals
+df_lm_analysis <- data.frame(yhat_lm_train, res_lm_train)
+colnames(df_lm_analysis) <- c("fitted", "resids")
+gg_fitres <- df_lm_analysis %>%
+        ggplot(aes(x = fitted, y = resids)) + 
+        geom_point(shape = 18) +
+        geom_smooth(fill = "mediumorchid4", colour="yellow2", method = "lm", fullrange=T, size=0.5) + xlab("Fitted Values") + ylab("Residuals") +
+        ggtitle("Fitted Values vs. Residuals") +
+        theme(panel.background = element_rect(fill = 'lightsteelblue', colour = 'white'))
+
 
 #RMSE(df_model_train[,1],yhat_lm_train)
 RMSE_lm <- RMSE(df_model_test[,1],yhat_lm_test)
@@ -873,9 +902,25 @@ XGB        | `r RMSE_xgb `
 Linear Reg.| `r RMSE_lm `
 kNN        | `r RMSE_knn `
 
-Linear regression has an adjusted r-sqared of .86. The high correlation between Government Dept to GDP and its three year average appears to be confusing the regression of the individual coefficents. This should not bias the overall prediction. If you add them together you get a slope of around 4. 
+Linear regression has an adjusted r-sqared of .86. The high correlation between Government Dept to GDP and its three year average appears to be confusing the regression of the individual magnitude of the coefficents. However, this should not bias the overall prediction. If you add them together you get a slope of around 4. The below graphic plots the residuals on fitted values with a LOESS curve. We can see the residuals. This looks good for to satisfy the homoskedacity and non-linarity assumptions
+
+```{r echo=FALSE}
+gg_fitres
+```
+
+
+
+####ENSEMBLE
+
 
 When we blended the algorithms predictions into an ensemble we reduced the mean square error to aproximately one. This means that on average with the machine learning our prediction were within one notch of the offical Fitch rating. That is, if the prediction was BB then on average the prediction would be within BB+ to BB-.
+
+
+```{r echo=FALSE}
+df_Ensemble[1,]
+```
+
+
 
 ```{r}
 xgb.plot.importance(importance_matrix[1:10,])
@@ -945,7 +990,7 @@ summary(model_lm_governance)
 
 #Governance
 
-When we break governance into its six components the following are significant and have the highest slope.
+When we break governance into its six components the following are significant and have the greatest magnitude:
 
 *  Government Effectiveness
 *  Rule of Law: Percentile Rank
@@ -983,6 +1028,8 @@ There is a feature forth in place, Government Debt to GDP. High Government Debt 
 Subject to more time I would be interested in applying  machine learning techniques to real bond data. If we calculate Expected Loss in a default to be equal to the product probability of a default and complement of the expected recovery amount (L = p.d *(1-recovery)) then we could train an algorithm on past performance. There is the capacity to include far more features. Furthermore, the algorith can continue to learn as new data is applied. 
 
 This project has demonstrated that combining methods that create unbias estimates by using different techniques to real life problem will still improve our predictions - even when those methods that have less efficacy.
+
+
 
 
 ```{r setup, include=FALSE}
