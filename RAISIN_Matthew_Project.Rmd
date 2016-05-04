@@ -672,14 +672,18 @@ map_zj <- z %>%
 
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-gg_Credit
 
-```
 
 
 
 #Visualisations
+
+In this section we will visualise the ratings data and the features. Then map the country ratings to the world map to look for regional effects.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+gg_Credit
+
+```
 
 
 Notice the dip at BB for the credit ratings. BBB- is the cut off for investment grade. The frequency of BB+ and BB- over BB is quite noticable.  
