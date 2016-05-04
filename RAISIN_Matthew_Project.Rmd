@@ -25,17 +25,17 @@ Three broad categories of bonds risks are:
 * Inflation Risk 
 
 
-Sovereign credit risk is the risk of a government becoming unwilling or unable to meet its debt obligations. A government may have a restructured default (rescheduling of payments) or a full default. The expected value of a loss is proportional to the probability of a default and the amount recovered in the case of a default. Much like a haircut can range from a little off the top, to the [el Greco Kojak](https://www.youtube.com/watch?v=-8hbUqhKM38) ("who loves ya baby?" - no one, you owe us money ). 
+Sovereign credit risk is the risk of a government becoming unwilling or unable to meet its debt obligations. A government may have a restructured default (rescheduling of payments) or a full default. The expected value of a loss is proportional to the probability of a default and the amount recovered in the case of a default. Much like a haircut can range from a little off the top, to the [el Greco Kojak](https://www.youtube.com/watch?v=-8hbUqhKM38) ("who loves ya baby?" - no one, you owe us money). 
 
 
 Interestingly, securities are the mechanism used to 'print money'. By a central bank purchasing its government's bonds, it increases the money supply, resulting in the creation of money.
 
-A government will engage a credit agency to rate its bonds. These ratings are used to assess the risk of the bonds, whereby the level of risk will dictate the interest rate premium. Credit ratings agencies are independent and are paid by the sovereign nation to provide an impartial service. As part of the arrangement the Sovereign will agree to private information sharing.
+A government will engage a credit agency to rate its bonds. These ratings are used to assess the risk of the bonds, whereby the level of risk will dictate the interest rate premium. Credit ratings agencies are independent and are paid by the sovereign nation to provide an impartial service. As part of the arrangement the sovereign nation will agree to private information sharing.
 
 
 Of the big three rating agencies (S&P, Moody's, and Fitch) I will be examining Fitch's ratings as they have made their ratings from 1994-2012 [publicly available](https://www.fitchratings.com/web_content/ratings/sovereign_ratings_history.xls) . In the interest of transparency they have also made an overview of their current methodology available [here](https://www.fitchratings.com/site/criteria/pfsov.html).
 
-I will be looking at local currency ratings which should be the apex of the credit rating compared to foreign currency credit ratings. If a sovereign's economy worsens then a counties local currency may depreciate in relation to the denomination of foreign currency securities thus increasing the risk of a default. Simply, less capacity to pay a higher relative debt amount.
+I will be looking at local currency ratings which should be the apex of the credit rating compared to foreign currency credit ratings. If a sovereign's economy worsens then a country's local currency may depreciate in relation to the denomination of foreign currency securities, thus increasing the risk of a default. Simply, less capacity to pay a higher relative debt amount.
 
 
 The below table indicates the credit ratings and their associated categories and grades. AAA is the prime rating. I will be encoding the ratings where AAA = 1, AA+ =2, AA = 3 and so forth. Strictly speaking there is the D/RD ratings that indicate that a country is defaulting. I have not included these as that is not a prediction but rather an indicator of what has happened.
@@ -564,7 +564,7 @@ df_FitchReduced_Summary <- summary(df_FitchReduced)
 
 #DATA
 
-The dataset has multiple entries for each country. There is may be serial autocorrelation correlation within the data. A country's previous rating will almost certainly be correlated with their subsequent rating.
+The dataset has multiple entries for each country. There may be serial autocorrelation within the data. A country's previous rating will almost certainly be correlated with their subsequent rating.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 df_Fitch %>% group_by(Country) %>% summarise(n())
