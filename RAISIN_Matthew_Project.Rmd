@@ -26,7 +26,7 @@ Three broad categories of bonds risks are:
 * Inflation Risk 
 
 
-Sovereign credit risk is the risk of a government becoming unwilling or unable to meet its debt obligations. A government may have a restructured default (rescheduling of payments) or a full default. The expected value of a loss is proportional to the probability of a default and the amount recovered in the case of a default. Much like a haircut can range from a little off the top, to the [el Greco Kojac](https://www.youtube.com/watch?v=-8hbUqhKM38) ??? ("who loves ya baby?" - no one, you owe us money ). 
+Sovereign credit risk is the risk of a government becoming unwilling or unable to meet its debt obligations. A government may have a restructured default (rescheduling of payments) or a full default. The expected value of a loss is proportional to the probability of a default and the amount recovered in the case of a default. Much like a haircut can range from a little off the top, to the [el Greco Kojak](https://www.youtube.com/watch?v=-8hbUqhKM38) ??? ("who loves ya baby?" - no one, you owe us money ). 
 
 
 Interestingly, securities are the mechanism used to 'print money': "If a central bank purchases a government security, such as a bond or treasury bill, it increases the money supply, in effect creating money." Wikipedia
@@ -166,6 +166,8 @@ CalculateRollingSD <- function(df, i, j) {
 
 ```
 
+#FEATURES
+
 The following table depicts the features I used based on Fitch's ratings criteria and their sources. I learnt from this assignment, high income nations have fewer reporting requirements making some of the data difficult to obtain. Some sovereigns, such as Argentina, have reported dubious statistics in the past and may of those have now been removed from the databases of organisations such as the World Bank, IMF and the OECD.  Country names need some massaging to link together the various databases with external agencies. I did try to input some of the missing data from the CIA Factbook (an amazing resource that could not be laid out worse) but that made the predictions worse. I assume that the CIA use different formula for calculating their statistics.
 
 ![Variables](./DATA/Variables.jpg)
@@ -176,10 +178,9 @@ One of the criticisms of the sovereign ratings systems is that they are slow to 
 
 Unfortunately, I was unable to get the data for foreign denominated debt for enough countries to be meaningful. This is an important statistic as foreign debt increases risk.
 
+The nomenclature of the various idicators by the various organisations made obtaining the data somewhat challenging.
 
-
-
-Thank you to the following organisations as we read in the data and wrangle the data below
+Thank you to the following platforms/open datasets as we read and wrangle the data below.
 
 * The World Bank: Data
 * IMF Data
@@ -190,7 +191,7 @@ Thank you to the following organisations as we read in the data and wrangle the 
 
 
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r  message=FALSE, warning=FALSE}
 
 
 setwd("./DATA/")
@@ -540,31 +541,40 @@ df_Fitch <- df_Fitch %>%
   mutate(locallongterm_letter = gsub("\\+","",locallongterm)) %>%
   mutate(locallongterm_letter = gsub("-","",locallongterm_letter)) 
 
-df_Fitch %>% group_by(Country) %>% summarise(n())
 
 write_csv(df_Fitch, "df_Fitch.csv")
 
-
+####Remove non rated entries and defaults
 df_Fitch <- df_Fitch %>%
   filter(locallongterm != "-" & locallongterm != "i" & locallongterm != "withdrawn" & locallongterm != "RD" & locallongterm != "DDD")
 
-
-df_FitchReduced <-df_Fitch %>% na.omit() 
+####REMOVE MISSINGNESS#######
+df_FitchReduced <- df_Fitch %>% 
+  na.omit() 
 
 
 df_FitchReduced_Summary <- summary(df_FitchReduced)
-strFitchReduced <- str(df_FitchReduced)
+#strFitchReduced <- str(df_FitchReduced)
 
 ```
 
 
-We can see that their is a lot of missingness when we join all the features together
+The dataset has multiple entries for each country. The is likely to be serial autocorrelation correlation within the data.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+df_Fitch %>% group_by(Country) %>% summarise(n())
+```
+
+
+We can see that their is a lot of missingness when we join all the features together. 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 df_Fitch_Summary
+
+
 ```
 
-After omitting NAs and droping rolling interest payments vaiables
+After omitting NAs and droping rolling interest payments vaiables we still have 311 observations to train our machine learning algorithms.
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -576,8 +586,6 @@ Visalise this
 
 
 ```{r  message=FALSE, warning=FALSE}
-
-
 CreditRatings <- c("AAA",
                    "AA+", "AA",
                    "A+","A","A-",
@@ -597,7 +605,6 @@ CreditRatingsLetter <- c("AAA",
                    "CCC",
                    "CC","C","DDD",
                    "RD")
-
 
 
 gg_Credit <- df_Fitch %>%
@@ -620,8 +627,7 @@ gg_CreditLetter <- df_Fitch %>%
     scale_x_discrete(limits=CreditRatingsLetter) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-prop.table(table(df_Fitch$locallongterm))
-prop.table(table(df_Fitch$locallongterm_letter))
+
 
 
 gg_CreditReduced <- df_FitchReduced %>%
@@ -645,9 +651,6 @@ gg_CreditLetterReduced <- df_FitchReduced %>%
     scale_x_discrete(limits=CreditRatingsLetter) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-prop.table(table(df_FitchReduced$locallongterm))
-prop.table(table(df_FitchReduced$locallongterm_letter))
-
 ###Create Country Map with Average Credit Rating
 z <- df_Fitch %>% 
   select(Country, locallongterm ) %>%
@@ -658,10 +661,6 @@ map_z <- z %>%
   summarize('Average Credit Rating'=mean(Credit)) %>%
   joinCountryData2Map( joinCode = "ISO3" ,nameJoinColumn = "Country Code")
 
-#do.call( addMapLegend, c(mapParams, legendWidth=0.5, legendMar = 2))
-
-
-
 ###Create Country Map with Average Junk Status
 z <- z %>%
   mutate(Junk = EncodeJunkBonds(locallongterm))
@@ -671,14 +670,9 @@ map_zj <- z %>%
   summarize('Junk Bond Status'=mean(Junk)) %>%
   joinCountryData2Map( joinCode = "ISO3" ,nameJoinColumn = "Country Code")
 
-#do.call( addMapLegend, c(mapParamsj, legendWidth=0.5, legendMar = 2))
-
-
-
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-
 gg_Credit
 
 ```
@@ -703,14 +697,29 @@ gg_CreditLetterReduced
 
 The above two diagrams show the distribution of the data minus missingness.  The irony is the AA rated countries share less data openly. This decline is mostly attrubutable to the AA and AA+ rated countries. 
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cat("Proportion Table of Full Dataset by Rating")
+prop.table(table(df_Fitch$locallongterm))
+cat("Proportion Table of Full Dataset by Grade")
+prop.table(table(df_Fitch$locallongterm_letter))
+cat("Proportion Table of Dataset Minus Missingness by Rating")
+prop.table(table(df_FitchReduced$locallongterm))
+cat("Proportion Table of Dataset Minus Missingness by Grade")
+prop.table(table(df_FitchReduced$locallongterm_letter))
+
+```
+
+
+
+
+```{r echo = FALSE, message=FALSE, warning=FALSE}
 mapParams <- mapCountryData(map_z ,nameColumnToPlot='Average Credit Rating', addLegend=FALSE ) 
 do.call( addMapLegend, c(mapParams, legendWidth=0.5, legendMar = 2))
 mapParamsj <- mapCountryData(map_zj ,nameColumnToPlot='Junk Bond Status', addLegend=FALSE ) 
 do.call( addMapLegend, c(mapParamsj, legendWidth=0.5, legendMar = 2))
 ```
 
-There is a clear divide around the world between South America, North Africa, Indian Subcontinent and the former USSR compared to North America, Western Europe and Australaisia. With the former largerly considered non investment grade (Junk). Without access low yeild bonds (cheap finance) how do these countries fund capital expenditures to develop? 
+There is a clear divide around the world between South America, North Africa, Indian Subcontinent and the former USSR compared to North America, Western Europe and Australaisia. With the former largerly considered non investment grade (Junk). Without access low yeild bonds (cheap finance) how do these countries fund capital expenditures to develop? The may well be continental cluster effects within the data. 
 
 ```{r message=FALSE, warning=FALSE}
 
@@ -752,8 +761,8 @@ gg_PCA1PCA2 <- tmp %>%  ggplot(aes(PC1, PC2)) + geom_point() +
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 gg_cor
 gg_PCA1PCA2
-
 ```
+
 #Method
 
 The ratings are an ordinal categorical variable.  I chose root squared mean error (RSME) as the evaluation metric as it is simple and gives extra cost for being further away from the truth. I chose to round the predictions as I am considering the ability of machine learning to replace experts to create actual ratings.  I  acknowledge that the distances between the various ratings may or may not be uniform.
@@ -844,7 +853,9 @@ XGB       | `r RMSE_xgb `
 LinearReg | `r RMSE_lm `
 kNN       | `r RMSE_knn `
 
-When we blended the algorithms predictions we reduced the mean square error to aproximately one. This means that on average with the machine learning our prediction were within one notch of the offical Fitch rating. That is, if the prediction was BBB then on average the prediction would be within BB+ to BB-.
+Linear regression has an adjusted r-sqared of .86. The high correlation between Government Dept to GDP and its three year average appears to be confusing the regression of the individual coefficents. This should not bias the overall prediction.
+
+When we blended the algorithms predictions into an ensemble we reduced the mean square error to aproximately one. This means that on average with the machine learning our prediction were within one notch of the offical Fitch rating. That is, if the prediction was BBB then on average the prediction would be within BB+ to BB-.
 
 ```{r}
 xgb.plot.importance(importance_matrix[1:10,])
@@ -912,6 +923,7 @@ summary(model_lm_governance)
 ```
 
 When we break governance into its six components the following are significant and have the highest slope.
+
 *  Government Effectiveness
 *  Rule of Law: Percentile Rank
 *  Regulatory Quality
@@ -921,35 +933,29 @@ When we break governance into its six components the following are significant a
 ```
 ![Legend](./DATA/LegendGov.jpg)
 
+
+
 The above spider chart displays the average rank for each of the measures of governance for AAA, investment and non-investment grade countries.  We can see that non-investment grade countries are particularily struggling with Rule of Law, Polital Stability/Absence of Violence and Control of Corruption. Notwithstanding, on every governance measure there is an improvement as the ratings improve.    
 
 #Conclusion
 
+Considering that there was some indicators missing and I was not working with exactly the same data as Fitch, I believe that creating an ensemble that can predict credit ratings within one notch as an encouraging for the utility of machine learning for solving real life expert problems. I was impressed how well a 'black box' algorithm like XGBoost performed on the data. 
 
+The absolute values of the slope coefficients in the linear regression and the gain summary from the gradient boosted tree identified the three most important indicators as Governance, CPI and Real Interest Rates. The below table matches those features to bond risks.  
 
+Bond Risk          | Feature Importance
+-------------------|-------------------
+Credit Risk        | Governance
+Inflation Risk     | CPI
+Currency Risk      | Real Interest Rate
 
+There is a feature forth in place, Government Debt to GDP. High Government Debt to GDP can cause a government to 'print money' which causes inflation, reduces a currencies value which in turn can create sovereign credit risk. Debt is alright if you can afford it. If it is accompanied by high enough GDP to make a small ration then there is no problem.
+
+Subject to more time I would be interested in applying  machine learning techniques to real bond data. If we calculate Expected Loss in a default to be equal to the product probability of a default and complement of the expected recovery amount (L = p.d *(1-recovery)) then we could train an algorithm on past performance. There is the capacity to include far more features. Furthermore, the algorith can continue to learn as new data is applied. 
 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
