@@ -35,7 +35,7 @@ I will be looking at local currency ratings which should be the apex of the cred
 
 A government will engage a credit agency to rate its bonds. These ratings are used to access the risk of the bonds.  The level of risk will dictate the interest rate premium. Unfortunately, I was unable to obtain nominal bond yield data (interest on the bond) as I wished to measure the association between the yields on the bonds (premium for risk) and sovereign ratings
 
-Credit ratings agencies are independent and are paid by the sovereign nation to provide an impartial service. As part of the arrangement the Sovereign will agree to private information sharing. Of the bid three rating agencies (S&P, Moody's, and Fitch) I will be examining Fitch's ratings as they have made their ratings from 1994-2012 [publicly available] (https://www.fitchratings.com/web_content/ratings/sovereign_ratings_history.xls) and in the interest of transparency they have made an overview of their current methodology available [here] (https://www.fitchratings.com/site/criteria/pfsov.html).
+Credit ratings agencies are independent and are paid by the sovereign nation to provide an impartial service. As part of the arrangement the Sovereign will agree to private information sharing. Of the bid three rating agencies (S&P, Moody's, and Fitch) I will be examining Fitch's ratings as they have made their ratings from 1994-2012 [publicly available](https://www.fitchratings.com/web_content/ratings/sovereign_ratings_history.xls) and in the interest of transparency they have made an overview of their current methodology available [here](https://www.fitchratings.com/site/criteria/pfsov.html).
 
 The below table indicates the ratings and their associated categories and grades. AAA is the prime rating. I will be encoding the ratings where AAA = 1, AA+ =2, AA = 3 and so forth. Strictly speaking there is the D/RD ratings that indicate that a country is defaulting. I have not included these as that is not a prediction but rather an indicator of what has happened.
 
@@ -657,7 +657,7 @@ map_z <- z %>%
   group_by(`Country Code`) %>%
   summarize('Average Credit Rating'=mean(Credit)) %>%
   joinCountryData2Map( joinCode = "ISO3" ,nameJoinColumn = "Country Code")
-mapParams <- mapCountryData(map_z ,nameColumnToPlot='Average Credit Rating', addLegend=FALSE ) 
+
 #do.call( addMapLegend, c(mapParams, legendWidth=0.5, legendMar = 2))
 
 
@@ -666,11 +666,11 @@ mapParams <- mapCountryData(map_z ,nameColumnToPlot='Average Credit Rating', add
 z <- z %>%
   mutate(Junk = EncodeJunkBonds(locallongterm))
 
-map_z <- z %>%
+map_zj <- z %>%
   group_by(`Country Code`) %>%
   summarize('Junk Bond Status'=mean(Junk)) %>%
   joinCountryData2Map( joinCode = "ISO3" ,nameJoinColumn = "Country Code")
-mapParamsj <- mapCountryData(map_z ,nameColumnToPlot='Junk Bond Status', addLegend=FALSE ) 
+
 #do.call( addMapLegend, c(mapParamsj, legendWidth=0.5, legendMar = 2))
 
 
@@ -690,23 +690,27 @@ Notice the dip at BB for the credit ratings. BBB- is the cut off for investment 
 gg_CreditLetter
 
 ```
-Now the distortion around BB has disappeared
+
+
+Now the distortion around BB has disappeared. The distribution is also looking more normal. 
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 gg_CreditReduced
-gg_CreditReducedLetter
+gg_CreditLetterReduced
 
 ```
 
-The above two diagrams show the distribution of the data minus missingness.  The irony is the AA rated countries share less data openly.
+The above two diagrams show the distribution of the data minus missingness.  The irony is the AA rated countries share less data openly. This decline is mostly attrubutable to the AA and AA+ rated countries. 
 
 ```{r}
+mapParams <- mapCountryData(map_z ,nameColumnToPlot='Average Credit Rating', addLegend=FALSE ) 
 do.call( addMapLegend, c(mapParams, legendWidth=0.5, legendMar = 2))
+mapParamsj <- mapCountryData(map_zj ,nameColumnToPlot='Junk Bond Status', addLegend=FALSE ) 
 do.call( addMapLegend, c(mapParamsj, legendWidth=0.5, legendMar = 2))
 ```
 
-There is a clear divide around the world between South America, Africa, Asia Mnor and the former USSR compared to North America, Western Europe and Australiasia. With the former largerly considered non investment grade (Junk). Without access low yeild bonds (cheap finance) how do these countries fund capital expenditures to develop? 
+There is a clear divide around the world between South America, North Africa, Indian Subcontinent and the former USSR compared to North America, Western Europe and Australaisia. With the former largerly considered non investment grade (Junk). Without access low yeild bonds (cheap finance) how do these countries fund capital expenditures to develop? 
 
 ```{r message=FALSE, warning=FALSE}
 
@@ -750,6 +754,7 @@ gg_cor
 gg_PCA1PCA2
 
 ```
+#Method
 
 The ratings are an ordinal categorical variable.  I chose root squared mean error (RSME) as the evaluation metric as it is simple and gives extra cost for being further away from the truth. I chose to round the predictions as I am considering the ability of machine learning to replace experts to create actual ratings.  I  acknowledge that the distances between the various ratings may or may not be uniform.
 
@@ -768,8 +773,8 @@ summary(model.lm)
 yhat_lm_train <- predict(model.lm)
 yhat_lm_test <- predict(model.lm, newdata = df_model_test)
 
-RMSE(df_model_train[,1],yhat_lm_train)
-RMSE(df_model_test[,1],yhat_lm_test)
+#RMSE(df_model_train[,1],yhat_lm_train)
+RMSE_lm <- RMSE(df_model_test[,1],yhat_lm_test)
 
 #kNN
 for (i in 1:7) {
@@ -780,6 +785,8 @@ for (i in 1:7) {
 }
 set.seed(9892)
 yhat_knn_test <- as.integer(knn3Train(df_model_train[,2:18], df_model_test[2:18],      as.factor(df_model_train[,1]), k = 1, l = 0, prob = FALSE, use.all = TRUE))
+RMSE_knn <- RMSE(df_model_test[,1],yhat_knn_test)
+
 
 #Gradient Boosted Tree XGBoost
 xgtrain <- data.matrix(df_model_train[,-1])
@@ -800,7 +807,7 @@ model.xgb <- xgboost(data = xgtrain,
                      verbose = 0
 )
 yhat_xgb_test <- predict(model.xgb, xgval)  
-RMSE(yhat_xgb_test ,df_model_test[,1])
+RMSE_xgb <- RMSE(yhat_xgb_test ,df_model_test[,1])
 
 
 #Export data for analysis
@@ -826,6 +833,16 @@ colnames(df_Ensemble) <- c("Prop XGB", "Prop Reg", "Prop kNN", "  RMSE  ")
 df_Ensemble
 
 ```
+
+#Results
+
+The xgboost algorithm had the lowest RMSE of: `r RMSE_xgb `
+
+Alorithm  | RMSE
+----------|----------
+XGB       | `r RMSE_xgb `
+LinearReg | `r RMSE_lm `
+kNN       | `r RMSE_knn `
 
 When we blended the algorithms predictions we reduced the mean square error to aproximately one. This means that on average with the machine learning our prediction were within one notch of the offical Fitch rating. That is, if the prediction was BBB then on average the prediction would be within BB+ to BB-.
 
@@ -856,9 +873,7 @@ df_FitchGovernance <- df_WGI %>% select(CC.PER.RNK, GE.PER.RNK,  RL.PER.RNK, VA.
 
 model_lm_governance <- lm(y ~ ., data = df_FitchGovernance)
 
-
 Junk = 9.5
-
 
 labs <- c("ControlOfCorruption", "GovernmentEffectiveness", "RuleOfLaw",  "VoiceAndAccountability","PoliticalStabilityAbsenceViolence","RegulatoryQuality")
 
@@ -889,10 +904,6 @@ Prime <- as.numeric(df_FitchGovernance %>% filter(y == 1) %>%
 scores = list( "Junk" = Junk, "Investment" = Investment, "Prime" = Prime)
 
  
-
-
-
-
 ```
 
 
@@ -900,14 +911,19 @@ scores = list( "Junk" = Junk, "Investment" = Investment, "Prime" = Prime)
 summary(model_lm_governance)
 ```
 
-
+When we break governance into its six components the following are significant and have the highest slope.
+*  Government Effectiveness
+*  Rule of Law: Percentile Rank
+*  Regulatory Quality
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
  chartJSRadar(scores, labs)
 ```
+![Legend](./DATA/LegendGov.jpg)
 
+The above spider chart displays the average rank for each of the measures of governance for AAA, investment and non-investment grade countries.  We can see that non-investment grade countries are particularily struggling with Rule of Law, Polital Stability/Absence of Violence and Control of Corruption. Notwithstanding, on every governance measure there is an improvement as the ratings improve.    
 
-
+#Conclusion
 
 
 
