@@ -559,7 +559,7 @@ df_FitchReduced_Summary <- summary(df_FitchReduced)
 ```
 
 
-The dataset has multiple entries for each country. The is likely to be serial autocorrelation correlation within the data.
+The dataset has multiple entries for each country. There is likely to be serial autocorrelation correlation within the data.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 df_Fitch %>% group_by(Country) %>% summarise(n())
@@ -677,7 +677,12 @@ gg_Credit
 
 ```
 
-Notice the dip at BB for the credit ratings. BBB- is the cut off for investment grade 
+
+
+#Visualisations
+
+
+Notice the dip at BB for the credit ratings. BBB- is the cut off for investment grade. The frequency of BB+ and BB- over BB is quite noticable.  
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -686,7 +691,7 @@ gg_CreditLetter
 ```
 
 
-Now the distortion around BB has disappeared. The distribution is also looking more normal. 
+Now the distortion around BB has disappeared and the distribution is also looking more normal. 
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -695,7 +700,7 @@ gg_CreditLetterReduced
 
 ```
 
-The above two diagrams show the distribution of the data minus missingness.  The irony is the AA rated countries share less data openly. This decline is mostly attrubutable to the AA and AA+ rated countries. 
+The above two diagrams show the distribution of the data minus missingness.  The irony is the AA rated countries share less open data. This decline in observations in the AA grade is mostly attrubutable to the AA and AA+ rated countries. 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 cat("Proportion Table of Full Dataset by Rating")
@@ -719,10 +724,11 @@ mapParamsj <- mapCountryData(map_zj ,nameColumnToPlot='Junk Bond Status', addLeg
 do.call( addMapLegend, c(mapParamsj, legendWidth=0.5, legendMar = 2))
 ```
 
-There is a clear divide around the world between South America, North Africa, Indian Subcontinent and the former USSR compared to North America, Western Europe and Australaisia. With the former largerly considered non investment grade (Junk). Without access low yeild bonds (cheap finance) how do these countries fund capital expenditures to develop? The may well be continental cluster effects within the data. 
+There is a clear divide around the world between South America, North Africa, Indian Subcontinent and the former USSR compared to North America, Western Europe and Australaisia. With the former largerly considered non investment grade (Junk). Without access low yeild bonds (cheap finance) how do these countries fund capital expenditures to develop? 
+
+There may well be continental cluster effects within the data. Subject to more time I would add a categorical variable to control for these effects.    
 
 ```{r message=FALSE, warning=FALSE}
-
 
 y <- EncodeRating(df_FitchReduced[,6])
 X <- as.matrix(df_FitchReduced[,9:27])
@@ -733,14 +739,11 @@ mins <- apply(X, 2, min)
 X <- scale(X, center = mins, scale = maxs - mins)
 summary(X)
 
-
 melted_X <- melt(cor(X))
 gg_cor <- ggplot(data = melted_X, aes(x=Var1, y=Var2, fill=value)) + 
   geom_tile() +
   scale_fill_gradient(aes(fill = value), low = "white",high = "steelblue") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
-
 
 pca <- prcomp(X, center=FALSE, scale=FALSE)
 summary(pca)$importance[,1:16]
@@ -758,14 +761,27 @@ gg_PCA1PCA2 <- tmp %>%  ggplot(aes(PC1, PC2)) + geom_point() +
 ```
 
 
+The below correlation matrix demonstrates that the Government Debt to GDP Ratio is highly correlated with the rolling Government Debt to GDP Ratio. Also, world GDP percentile rank is highly correlated with the natural log of world GDP contribution. These may be redundant features. 
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 gg_cor
+
+```
+
+
+The below allows a 2D visualisation of the measure of variation each feature contributes through preinciple component analysis. These two components represent about 85% of the variation.
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 gg_PCA1PCA2
 ```
 
+
+
+
 #Method
 
-The ratings are an ordinal categorical variable.  I chose root squared mean error (RSME) as the evaluation metric as it is simple and gives extra cost for being further away from the truth. I chose to round the predictions as I am considering the ability of machine learning to replace experts to create actual ratings.  I  acknowledge that the distances between the various ratings may or may not be uniform.
+The ratings are a ordinal categorical variable.  I chose root mean squared error (RMSE) as the evaluation metric as it is simple and gives extra cost for being further away from the truth. I chose to round the predictions as I am considering the ability of machine learning to replace experts to create actual ratings.  I  acknowledge that the distances between the various ratings may or may not be uniform.
 
 The three algorithms that I  tested for efficacy are linear regression, k-nearest neighbour and gradient boosted trees as per the XGBoost library. Firstly, I scaled all the variables to a 0-1 scale thus giving equal to each for the distance calculations of kNN. I  trained the algorithms on a subset of the data then tested there efficaing on a spearate test subset. After testing the efficacy of each algorithm I blended the predictions with the goal to reduce variation. 
 
@@ -845,17 +861,17 @@ df_Ensemble
 
 #Results
 
-The xgboost algorithm had the lowest RMSE of: `r RMSE_xgb `
+The xgboost algorithm had the lowest RMSE of: `r RMSE_xgb `. The below table compares the RMSE of the three algorithms.
 
-Alorithm  | RMSE
-----------|----------
-XGB       | `r RMSE_xgb `
-LinearReg | `r RMSE_lm `
-kNN       | `r RMSE_knn `
+Aglorithm  | RMSE
+-----------|----------
+XGB        | `r RMSE_xgb `
+Linear Reg.| `r RMSE_lm `
+kNN        | `r RMSE_knn `
 
-Linear regression has an adjusted r-sqared of .86. The high correlation between Government Dept to GDP and its three year average appears to be confusing the regression of the individual coefficents. This should not bias the overall prediction.
+Linear regression has an adjusted r-sqared of .86. The high correlation between Government Dept to GDP and its three year average appears to be confusing the regression of the individual coefficents. This should not bias the overall prediction. If you add them together you get a slope of around 4. 
 
-When we blended the algorithms predictions into an ensemble we reduced the mean square error to aproximately one. This means that on average with the machine learning our prediction were within one notch of the offical Fitch rating. That is, if the prediction was BBB then on average the prediction would be within BB+ to BB-.
+When we blended the algorithms predictions into an ensemble we reduced the mean square error to aproximately one. This means that on average with the machine learning our prediction were within one notch of the offical Fitch rating. That is, if the prediction was BB then on average the prediction would be within BB+ to BB-.
 
 ```{r}
 xgb.plot.importance(importance_matrix[1:10,])
@@ -922,11 +938,19 @@ scores = list( "Junk" = Junk, "Investment" = Investment, "Prime" = Prime)
 summary(model_lm_governance)
 ```
 
+
+#Governance
+
 When we break governance into its six components the following are significant and have the highest slope.
 
 *  Government Effectiveness
 *  Rule of Law: Percentile Rank
 *  Regulatory Quality
+
+The above spider chart displays the average rank for each of the measures of governance for AAA, investment and non-investment grade countries.  We can see that non-investment grade countries are particularily struggling with Rule of Law, Polital Stability/Absence of Violence and Control of Corruption. Notwithstanding, on every governance measure there is an improvement as the ratings improve.   
+
+
+###Spider Chart of Governance
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
  chartJSRadar(scores, labs)
@@ -935,7 +959,8 @@ When we break governance into its six components the following are significant a
 
 
 
-The above spider chart displays the average rank for each of the measures of governance for AAA, investment and non-investment grade countries.  We can see that non-investment grade countries are particularily struggling with Rule of Law, Polital Stability/Absence of Violence and Control of Corruption. Notwithstanding, on every governance measure there is an improvement as the ratings improve.    
+
+ 
 
 #Conclusion
 
@@ -952,6 +977,8 @@ Currency Risk      | Real Interest Rate
 There is a feature forth in place, Government Debt to GDP. High Government Debt to GDP can cause a government to 'print money' which causes inflation, reduces a currencies value which in turn can create sovereign credit risk. Debt is alright if you can afford it. If it is accompanied by high enough GDP to make a small ration then there is no problem.
 
 Subject to more time I would be interested in applying  machine learning techniques to real bond data. If we calculate Expected Loss in a default to be equal to the product probability of a default and complement of the expected recovery amount (L = p.d *(1-recovery)) then we could train an algorithm on past performance. There is the capacity to include far more features. Furthermore, the algorith can continue to learn as new data is applied. 
+
+This project has demonstrated that combining methods that create unbias estimates by using different techniques to real life problem will still improve our predictions - even when those methods that have less efficacy.
 
 
 ```{r setup, include=FALSE}
