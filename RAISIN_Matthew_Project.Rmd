@@ -9,14 +9,14 @@ output: html_document
 
 In this project I will investigate reverse engineering the method that the Fitch Credit Rating Agency uses to create their Sovereign Credit Ratings. After analysis of the relevant variables I will use various machine learning techniques to allow the data to tell the story. My motivation includes an interest in the almost commoditisation and disintermediation of traditionally specialised analysis, through the availability of open data and the widespread availability of sophisticated computing power. This process will also allow me to explore this idea using Linear regression, k-nearest neighbour, gradient boosted trees and ensembling. 
 
-During the GFC in 2007, Australia managed to maintain its AAA credit rating and used this to guarantee the deposits in our banks. This was very important to the maintenance of the Australian economy through ensuring the availability of low yield foreign lending. However, the head of research for one of the big for banks in Australia wrote a recent report stating that Australia faces an upcoming Federal election with Commonwealth debt already "pushing against ratings agencies' AAA boundary". The risk to Australia of a reduction in its credit rating would be associated with increased cost to finance Governmental operations through bonds. In relating this to my investigation, are there insights that can be drawn from the method of calculating credit risks that can help Australia maintain her credit rating? Moreover, can these insights be applied to 
+During the GFC in 2007, Australia managed to maintain its AAA credit rating and used this to guarantee the deposits in our banks. This was very important to the maintenance of the Australian economy through ensuring the availability of low yield foreign lending. However, the head of research for one of the big for banks in Australia wrote a recent report stating that Australia faces an upcoming Federal election with Commonwealth debt already "pushing against ratings agencies' AAA boundary". The risk to Australia of a reduction in its credit rating would be associated with increased cost to finance Governmental operations through bonds. In relating this to my investigation, are there insights that can be drawn from the method of calculating credit risks that can help Australia maintain her credit rating? Moreover, can these insights from the calculation methodology be applied to evaluating why some countries rate better than others?
 
-My literature review indicates that statistical analysis using this economic theory was performed for S&P and Moody ratings in 1996 and later for the Big Three in 2007. In this project I will update this research for Fitch with new data and complement it by utilising machine learning.
+My literature review indicates that statistical analysis using economic theory was performed for S&P and Moody ratings in 1996 and later for the Big Three in 2007. In this project I will update this research for Fitch with new data and complement it by utilising machine learning.
 
 
 #Introduction
 
-A government has various ways to raises funds such as taxation, selling assets or debt. Bonds are either denominated in the local currency or a foreign currency. The bond repayments are split into principle and interest payments. The principle is paid at the maturity of the bond with scheduled interest payments. I will be looking at the credit ratings for the issuing of long term securities in the form of 10 year bonds in a sovereign's local currency.
+A government has various ways to raise funds such as taxation, selling assets or debt. Bonds are either denominated in the local currency or a foreign currency. The bond repayments are split into principle and interest payments. The principle is paid at the maturity of the bond with scheduled interest payments. I will be looking at the credit ratings for the issuing of long term securities in the form of 10 year bonds in a sovereign's local currency.
 
 Three broad categories of bonds risks are:
 
@@ -25,18 +25,20 @@ Three broad categories of bonds risks are:
 * Inflation Risk 
 
 
-Sovereign credit risk is the risk of a government becoming unwilling or unable to meet its debt obligations. A government may have a restructured default (rescheduling of payments) or a full default. The expected value of a loss is proportional to the probability of a default and the amount recovered in the case of a default. Much like a haircut can range from a little off the top, to the [el Greco Kojak](https://www.youtube.com/watch?v=-8hbUqhKM38) ??? ("who loves ya baby?" - no one, you owe us money ). 
+Sovereign credit risk is the risk of a government becoming unwilling or unable to meet its debt obligations. A government may have a restructured default (rescheduling of payments) or a full default. The expected value of a loss is proportional to the probability of a default and the amount recovered in the case of a default. Much like a haircut can range from a little off the top, to the [el Greco Kojak](https://www.youtube.com/watch?v=-8hbUqhKM38) ("who loves ya baby?" - no one, you owe us money ). 
 
 
-Interestingly, securities are the mechanism used to 'print money': "If a central bank purchases a government security, such as a bond or treasury bill, it increases the money supply, in effect creating money." Wikipedia
+Interestingly, securities are the mechanism used to 'print money'. By a central bank purchasing its government's bonds, it increases the money supply, resulting in the creation of money.
 
-I will be looking at local currency ratings which should be the apex of the credit rating compared to foreign currency credit ratings. If a sovereign's economy worsens then a counties local currency may depreciate in relation to the denomination of foreign currency securities thus increasing the risk of a default on. Namely, less capacity to pay a higher relative debt amount.
+A government will engage a credit agency to rate its bonds. These ratings are used to assess the risk of the bonds, whereby the level of risk will dictate the interest rate premium. Credit ratings agencies are independent and are paid by the sovereign nation to provide an impartial service. As part of the arrangement the Sovereign will agree to private information sharing.
 
-A government will engage a credit agency to rate its bonds. These ratings are used to access the risk of the bonds.  The level of risk will dictate the interest rate premium. Unfortunately, I was unable to obtain nominal bond yield data (interest on the bond) as I wished to measure the association between the yields on the bonds (premium for risk) and sovereign ratings
 
-Credit ratings agencies are independent and are paid by the sovereign nation to provide an impartial service. As part of the arrangement the Sovereign will agree to private information sharing. Of the bid three rating agencies (S&P, Moody's, and Fitch) I will be examining Fitch's ratings as they have made their ratings from 1994-2012 [publicly available](https://www.fitchratings.com/web_content/ratings/sovereign_ratings_history.xls) and in the interest of transparency they have made an overview of their current methodology available [here](https://www.fitchratings.com/site/criteria/pfsov.html).
+Of the big three rating agencies (S&P, Moody's, and Fitch) I will be examining Fitch's ratings as they have made their ratings from 1994-2012 [publicly available](https://www.fitchratings.com/web_content/ratings/sovereign_ratings_history.xls) . In the interest of transparency they have also made an overview of their current methodology available [here](https://www.fitchratings.com/site/criteria/pfsov.html).
 
-The below table indicates the ratings and their associated categories and grades. AAA is the prime rating. I will be encoding the ratings where AAA = 1, AA+ =2, AA = 3 and so forth. Strictly speaking there is the D/RD ratings that indicate that a country is defaulting. I have not included these as that is not a prediction but rather an indicator of what has happened.
+I will be looking at local currency ratings which should be the apex of the credit rating compared to foreign currency credit ratings. If a sovereign's economy worsens then a counties local currency may depreciate in relation to the denomination of foreign currency securities thus increasing the risk of a default. Simply, less capacity to pay a higher relative debt amount.
+
+
+The below table indicates the credit ratings and their associated categories and grades. AAA is the prime rating. I will be encoding the ratings where AAA = 1, AA+ =2, AA = 3 and so forth. Strictly speaking there is the D/RD ratings that indicate that a country is defaulting. I have not included these as that is not a prediction but rather an indicator of what has happened.
 
 ![Fitch Ratings](./data/FitchCreditRatingsExplained.jpg) 
 
@@ -165,21 +167,19 @@ CalculateRollingSD <- function(df, i, j) {
 
 ```
 
-#FEATURES
+#FEATURE ENGINEERING BASED ON FITCH'S RATINGS CRITERIA
 
-The following table depicts the features I used based on Fitch's ratings criteria and their sources. I learnt from this assignment, high income nations have fewer reporting requirements making some of the data difficult to obtain. Some sovereigns, such as Argentina, have reported dubious statistics in the past and may of those have now been removed from the databases of organisations such as the World Bank, IMF and the OECD.  Country names need some massaging to link together the various databases with external agencies. I did try to input some of the missing data from the CIA Factbook (an amazing resource that could not be laid out worse) but that made the predictions worse. I assume that the CIA use different formula for calculating their statistics.
+The following table depicts the features I used based on Fitch's ratings criteria and their sources. I learnt from this assignment that high income nations have fewer reporting requirements, making some of the data difficult to obtain. Some sovereigns, such as Argentina, have reported dubious statistics in the past which have now been removed from the databases of organisations such as the World Bank, IMF and the OECD.  Country names need some massaging to link together the various databases with external agencies. I did try to input some of the missing data from the CIA Factbook (an amazing resource that could not be laid out worse for data downloading) but that made the predictions worse. I assume that the CIA use different formula for calculating their statistics.
 
 ![Variables](./DATA/Variables.jpg)
 
-It is noteworthy that where possible, Fitch prescribes using ratios, failing that currency amounts are standardised to USD. I proffer this is to remove currency distortions and facilitate year to year comparisons.
+It is noteworthy that where possible, Fitch prescribes using ratios. Failing that, currency amounts are standardised to USD. I proffer this is to remove currency distortions and facilitate year to year comparisons.
 
-One of the criticisms of the sovereign ratings systems is that they are slow to respond then overcorrect. To account for the normal business cycle (ups and downs) many of the variables use smoothing. This creates a lagging effect to structural changes and may expain why the ratings are slow to respond. 
+One of the criticisms of the sovereign ratings systems is that they are slow to respond, then overcorrect. To account for the normal business cycle (ups and downs) many of the variables use smoothing. This creates a lagging effect to structural changes and may expain why the ratings are slow to respond. 
 
-Unfortunately, I was unable to get the data for foreign denominated debt for enough countries to be meaningful. This is an important statistic as foreign debt increases risk.
+Unfortunately, I was unable to get the data for foreign denominated debt for enough countries to be meaningful. This is an important statistic as foreign debt increases risk.I was also unable to obtain nominal bond yield data (interest on the bond) as I wished to measure the association between the yields on the bonds (premium for risk) and sovereign ratings
 
-The nomenclature of the various idicators by the various organisations made obtaining the data somewhat challenging.
-
-Thank you to the following platforms/open datasets as we read and wrangle the data below.
+The nomenclature of the various indicators by the various organisations made obtaining the data somewhat challenging. The following platforms/open datasets were used: .
 
 * The World Bank: Data
 * IMF Data
@@ -562,15 +562,16 @@ df_FitchReduced_Summary <- summary(df_FitchReduced)
 
 ```
 
+#DATA
 
-The dataset has multiple entries for each country. There is may be serial autocorrelation correlation within the data. A countries previous rating will almost certainly be correlated with their following rating.
+The dataset has multiple entries for each country. There is may be serial autocorrelation correlation within the data. A country's previous rating will almost certainly be correlated with their subsequent rating.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 df_Fitch %>% group_by(Country) %>% summarise(n())
 ```
 
 
-We can see that their is a lot of missingness when we join all the features together. I attempted to impute the data from other sources but it reduced the accuracy of the models. As such, I decided to drop the observations with missing data.
+We can see that there is a lot of missingness when we join all the features together. I attempted to impute the data from other sources but it reduced the accuracy of the models. As such, I decided to drop the observations with missing data.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 df_Fitch_Summary
@@ -578,7 +579,7 @@ df_Fitch_Summary
 
 ```
 
-After dropping rolling interest paymentsand omitting NAs and vaiables we still have 311 observations to train our machine learning algorithms. 
+After dropping rolling interest payments and omitting NAs and variables, we still have 311 observations to train our machine learning algorithms. 
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -685,7 +686,7 @@ map_zj <- z %>%
 
 #Visualisations
 
-In this section we will visualise the ratings data and the features. Then map the country ratings to the world map to look for regional effects.
+In this section we will visualise the ratings data as obtained from Fitch credit ratings, and the features described earlier.  We will then map the country ratings to the world map to look for regional effects.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 gg_Credit
@@ -693,7 +694,7 @@ gg_Credit
 ```
 
 
-Notice the dip at BB for the credit ratings. BBB- is the cut off for investment grade. The frequency of BB+ and BB- over BB is quite noticable.  
+It is interesting to notice above the dip at BB for the credit ratings count. BBB- is the cut off for investment grade. The frequency of BB+ and BB- over BB is quite noticable.  
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -702,7 +703,7 @@ gg_CreditLetter
 ```
 
 
-Now the distortion around BB has disappeared and the distribution is also looking more normal. 
+When we consolidate the data by grade rather than by rating, the distortion around BB has disappeared and the distribution is also looking more normal. 
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -711,7 +712,7 @@ gg_CreditLetterReduced
 
 ```
 
-The above two diagrams show the distribution of the data minus missingness.  The irony is the AA rated countries share less open data. This decline in observations in the AA grade is mostly attrubutable to the AA and AA+ rated countries. The were also a significant number of AAA countries that I did not have the complete data. 
+The above two diagrams show the distribution of the data minus missingness.  The irony is that the AA rated countries share less open data. This decline in observations in the AA grade is mostly attributable to the AA and AA+ rated countries. I did not have the complete data for a significant number of AAA countries. The data for these high income countries may be missing as they do not have the same reporting requirements as the lower and middle income nations, being contributors to, rather than borrowers of money from the World Bank and IMF.  
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 cat("Proportion Table of Full Dataset by Rating")
@@ -735,9 +736,9 @@ mapParamsj <- mapCountryData(map_zj ,nameColumnToPlot='Junk Bond Status', addLeg
 do.call( addMapLegend, c(mapParamsj, legendWidth=0.5, legendMar = 2))
 ```
 
-There is a clear divide around the world between South America, North Africa, Indian Subcontinent and the former USSR compared to North America, Western Europe and Australaisia. With the former largerly considered non investment grade (Junk). Without access low yeild bonds (cheap finance) how do these countries fund capital expenditures to develop? 
+When we mapped the credit ratings and the credit quality as shown above, there is a clear divide around the world between South America, North Africa, Indian Subcontinent and the former USSR (marked red) compared to North America, Western Europe, China and Australasia (marked yellow). The former (marked red) are largely considered non-investment grade (junk bonds). Because of their junk status, it makes the premium on their bonds difficult for the government to afford, and only gives them limited access to the credit market. This subsequently limits their ability to perform capital works to improve infrastructure and to develop.
 
-There may well be continental cluster effects within the data. Subject to more time I would add a categorical variable to control for these effects.
+There may well be continental cluster effects within the data. Subject to more time, I would add a categorical variable to control for these effects.
 
 Next I scaled and centered all the features to 0-1 scale. This facilitated unbiased distance calculations and comparisons of coefficents in a regression.
 
@@ -783,7 +784,7 @@ gg_cor
 ```
 
 
-The below allows a 2D visualisation of the measure of variation each feature contributes through preinciple component analysis. These two components represent about 85% of the variation.
+The below allows a 2D visualisation of the measure of variation each feature contributes through principle component analysis. These two components represent about 85% of the variation.
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -797,7 +798,7 @@ gg_PCA1PCA2
 
 The ratings are a ordinal categorical variable.  I chose root mean squared error (RMSE) as the evaluation metric as it is simple and gives extra cost for being further away from the truth. I chose to round the predictions as I am considering the ability of machine learning to replace experts to create actual ratings.  I  acknowledge that the distances between the various ratings may or may not be uniform.
 
-The three algorithms that I  tested for efficacy are linear regression, k-nearest neighbour and gradient boosted trees as per the XGBoost library. Firstly, I scaled all the variables to a 0-1 scale thus giving equal to each for the distance calculations of kNN. I  trained the algorithms on a subset of the data then tested there efficaing on a spearate test subset. After testing the efficacy of each algorithm I blended the predictions with the goal to reduce variation. 
+The three algorithms that I  tested for efficacy are linear regression, k-nearest neighbour and gradient boosted trees as per the XGBoost library. Firstly, I scaled all the variables to a 0-1 scale thus giving equal to each for the distance calculations of kNN. I  trained the algorithms on a subset of the data then tested their efficacy on a spearate test subset. After testing the efficacy of each algorithm I blended the predictions with the goal to reduce variation. There was an 80/20 split between the training and test sets. 
 
 
 ```{r message=FALSE, warning=FALSE}
@@ -902,7 +903,7 @@ XGB        | `r RMSE_xgb `
 Linear Reg.| `r RMSE_lm `
 kNN        | `r RMSE_knn `
 
-Linear regression has an adjusted r-sqared of .86. The high correlation between Government Dept to GDP and its three year average appears to be confusing the regression of the individual magnitude of the coefficents. However, this should not bias the overall prediction. If you add them together you get a slope of around 4. The below graphic plots the residuals on fitted values with a LOESS curve. We can see the residuals. This looks good for to satisfy the homoskedacity and non-linarity assumptions
+Linear regression has an adjusted r-squared of .86. The high correlation between Government debt to GDP and its three year average appears to be confusing the regression of the individual magnitude of the coefficents. However, this should not bias the overall prediction. If you add them together you get a slope of around 4. The below graphic plots the residuals on fitted values with a LOESS curve. We can see the residuals. Visually the plot appears to indicate that the linear regression satisfies the homoskedacity and non-linearity assumptions
 
 ```{r echo=FALSE}
 gg_fitres
@@ -926,7 +927,7 @@ df_Ensemble[1,]
 xgb.plot.importance(importance_matrix[1:10,])
 ```
 
-The gradient boosted tree algorithm has the best predictive power. When we consider the consider the gain for each of the variables we can see that the Governance feature has the highest gain. The Governance indicator is the average of the percentile rank for six indicators: 
+The gradient boosted tree algorithm has the best predictive power. When we consider the gain for each of the variables we can see that the Governance feature has the highest gain. The Governance indicator is the average of the percentile rank for six indicators: 
 
 *  Control of Corruption
 *  Government Effectiveness
@@ -935,7 +936,7 @@ The gradient boosted tree algorithm has the best predictive power. When we consi
 *  Political Stability and Absence of Violence/Terrorism
 *  Regulatory Quality
 
-To get a better understanding of governance we can break down that composite variable into it individual components and run a regression analysis.  
+To get a better understanding of governance we can break down that composite variable into its individual components and run a regression analysis.  
 
 
 
@@ -996,7 +997,9 @@ When we break governance into its six components the following are significant a
 *  Rule of Law: Percentile Rank
 *  Regulatory Quality
 
-The above spider chart displays the average rank for each of the measures of governance for AAA, investment and non-investment grade countries.  We can see that non-investment grade countries are particularily struggling with Rule of Law, Polital Stability/Absence of Violence and Control of Corruption. Notwithstanding, on every governance measure there is an improvement as the ratings improve.   
+The spider chart below displays the average rank for each of the measures of governance for AAA, investment and non-investment grade countries.  We can see that non-investment grade countries are particularily struggling with Rule of Law, Polital Stability/Absence of Violence and Control of Corruption. Notwithstanding, on every governance measure there is an improvement as the ratings improve. 
+
+This also illustrates the difficulty for these poorer countries to improve their credit rating and attract foreign investment. 
 
 
 ###Spider Chart of Governance
@@ -1013,7 +1016,7 @@ The above spider chart displays the average rank for each of the measures of gov
 
 #Conclusion
 
-Considering that there was some indicators missing and I was not working with exactly the same data as Fitch, I believe that creating an ensemble that can predict credit ratings within one notch as an encouraging for the utility of machine learning for solving real life expert problems. I was impressed how well a 'black box' algorithm like XGBoost performed on the data. 
+Considering that there was some indicators missing and I was not working with exactly the same data as Fitch, I believe that creating an ensemble that can predict credit ratings within one notch as an encouraging sign for the utility of machine learning for solving real life expert problems. I was impressed how well a 'black box' algorithm like XGBoost performed on the data. 
 
 The absolute values of the slope coefficients in the linear regression and the gain summary from the gradient boosted tree identified the three most important indicators as Governance, CPI and Real Interest Rates. The below table matches those features to bond risks.  
 
@@ -1023,11 +1026,13 @@ Credit Risk        | Governance
 Inflation Risk     | CPI
 Currency Risk      | Real Interest Rate
 
-There is a feature forth in place, Government Debt to GDP. High Government Debt to GDP can cause a government to 'print money' which causes inflation, reduces a currencies value which in turn can create sovereign credit risk. Debt is alright if you can afford it. If it is accompanied by high enough GDP to make a small ration then there is no problem.
+There is a feature in fourth place, Government Debt to GDP. High Government Debt to GDP can cause a government to 'print money' which causes inflation, reduces a currency's value which in turn can create sovereign credit risk. Debt is alright if you can afford it. If it is accompanied by high enough GDP to make a small ratio, then there is no problem.
 
-Subject to more time I would be interested in applying  machine learning techniques to real bond data. If we calculate Expected Loss in a default to be equal to the product probability of a default and complement of the expected recovery amount (L = p.d *(1-recovery)) then we could train an algorithm on past performance. There is the capacity to include far more features. Furthermore, the algorith can continue to learn as new data is applied. 
+In our introduction, we considered how Australia was close to losing her AAA credit rating. Our investigation shows that increasing the GDP will offset a high debt and would be key to Australia maintaining her credit rating. 
 
-This project has demonstrated that combining methods that create unbias estimates by using different techniques to real life problem will still improve our predictions - even when those methods that have less efficacy.
+Subject to more time, I would be interested in applying  machine learning techniques to real bond data. If we calculate Expected Loss in a default to be equal to the product probability of a default and the complement of the expected recovery amount (L = p.d *(1-recovery)) then we could train an algorithm on past performance. There is the capacity to include far more features. Furthermore, the algorithm can continue to learn as new data is applied. 
+
+This project has demonstrated that combining methods that create unbias estimates, utilising different techniques, to a real life problem will still improve our predictions - even when those methods have less efficacy.
 
 
 
