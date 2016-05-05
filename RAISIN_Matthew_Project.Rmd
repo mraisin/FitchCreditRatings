@@ -932,8 +932,8 @@ The gradient boosted tree algorithm has the best predictive power. When we consi
 *  Government Effectiveness
 *  Rule of Law: Percentile Rank
 *  Voice and Accountability
-*  Political Stability and Absence of Violence/Terrorism
-*  Regulatory Quality
+*  Political Stability and Absence of Violence/Terrorism 
+*  Regulatory Quality 
 
 To get a better understanding of governance we can break down that composite variable into its individual components and run a regression analysis.  
 
@@ -996,9 +996,9 @@ When we break governance into its six components the following are significant a
 *  Rule of Law: Percentile Rank
 *  Regulatory Quality
 
-The spider chart below displays the average rank for each of the measures of governance for AAA, investment and non-investment grade countries.  We can see that non-investment grade countries are particularily struggling with Rule of Law, Polital Stability/Absence of Violence and Control of Corruption. Notwithstanding, on every governance measure there is an improvement as the ratings improve. 
+The spider chart below displays the average rank for each of the measures of governance for AAA, investment and non-investment grade countries. We can see that non-investment grade countries are particularily struggling with Rule of Law, Polital Stability/Absence of Violence and Control of Corruption. This also illustrates the difficulty for these poorer countries to improve their credit rating and attract foreign investment.
 
-This also illustrates the difficulty for these poorer countries to improve their credit rating and attract foreign investment. 
+Notwithstanding, on every governance measure there is an improvement as the ratings improve.
 
 
 ###Spider Chart of Governance
