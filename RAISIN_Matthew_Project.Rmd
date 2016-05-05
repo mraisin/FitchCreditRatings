@@ -11,7 +11,7 @@ In this project I will investigate reverse engineering the method that the Fitch
 
 During the GFC in 2007, Australia managed to maintain its AAA credit rating and used this to guarantee the deposits in our banks. This was very important to the maintenance of the Australian economy through ensuring the availability of low yield foreign lending. However, the head of research for one of the big for banks in Australia wrote a recent report stating that Australia faces an upcoming Federal election with Commonwealth debt already "pushing against ratings agencies' AAA boundary". The risk to Australia of a reduction in its credit rating would be associated with increased cost to finance Governmental operations through bonds. In relating this to my investigation, are there insights that can be drawn from the method of calculating credit risks that can help Australia maintain her credit rating? Moreover, can these insights from the calculation methodology be applied to evaluating why some countries rate better than others?
 
-My literature review indicates that statistical analysis using economic theory was performed for S&P and Moody ratings in 1996 and later for the Big Three in 2007. In this project I will update this research for Fitch with new data and complement it by utilising machine learning.
+My literature review indicates that statistical analysis using economic theory was performed for S&P and Moody ratings in [1996](https://www.newyorkfed.org/research/epr/96v02n2/9610cant.html) and later for the Big Three in [2003](https://www.imf.org/external/pubs/ft/wp/2003/wp03122.pdf). In this project I will update this research for Fitch with new data and complement it by utilising machine learning.
 
 
 #Introduction
