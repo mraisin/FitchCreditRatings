@@ -43,9 +43,8 @@ The below table indicates the credit ratings and their associated categories and
 ![Fitch Ratings](./data/FitchCreditRatingsExplained.jpg) 
 
 
-Load Libraries
 
-```{r  message=FALSE, warning=FALSE}
+```{r  echo = FALSE, message=FALSE, warning=FALSE}
 ###Loading Libraries####
 library(tidyr)
 library(dplyr)
@@ -64,9 +63,9 @@ library(knitr)
 
 ```
 
-Create Functions
 
-```{r  message=FALSE, warning=FALSE}
+
+```{r  echo = FALSE, message=FALSE, warning=FALSE}
 
 #Convert World Bank data from wide to long
 TidyUpWorldBank <- function(df_WorldBank) {
@@ -190,7 +189,7 @@ The nomenclature of the various indicators by the various organisations made obt
 
 
 
-```{r  message=FALSE, warning=FALSE}
+```{r  echo = FALSE, message=FALSE, warning=FALSE}
 
 #####################################################################
 #
@@ -589,7 +588,7 @@ df_FitchReduced_Summary
 
 
 
-```{r  message=FALSE, warning=FALSE}
+```{r  echo = FALSE, message=FALSE, warning=FALSE}
 
 #####################################################################
 #
@@ -743,7 +742,7 @@ There may well be continental cluster effects within the data. Subject to more t
 Next I scaled and centered all the features to 0-1 scale. This facilitated unbiased distance calculations and comparisons of coefficents in a regression.
 
 
-```{r message=FALSE, warning=FALSE}
+```{r echo = FALSE, message=FALSE, warning=FALSE}
 
 y <- EncodeRating(df_FitchReduced[,6])
 X <- as.matrix(df_FitchReduced[,9:27])
@@ -801,7 +800,7 @@ The ratings are a ordinal categorical variable.  I chose root mean squared error
 The three algorithms that I  tested for efficacy are linear regression, k-nearest neighbour and gradient boosted trees as per the XGBoost library. Firstly, I scaled all the variables to a 0-1 scale thus giving equal to each for the distance calculations of kNN. I  trained the algorithms on a subset of the data then tested their efficacy on a spearate test subset. After testing the efficacy of each algorithm I blended the predictions with the goal to reduce variation. There was an 80/20 split between the training and test sets. 
 
 
-```{r message=FALSE, warning=FALSE}
+```{r echo = FALSE, message=FALSE, warning=FALSE}
 
 #####################################################################
 #
@@ -923,7 +922,7 @@ df_Ensemble[1,]
 
 
 
-```{r}
+```{r echo=FALSE}
 xgb.plot.importance(importance_matrix[1:10,])
 ```
 
@@ -940,7 +939,7 @@ To get a better understanding of governance we can break down that composite var
 
 
 
-```{r message=FALSE, warning=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 df_FitchGovernance <- df_WGI %>% select(CC.PER.RNK, GE.PER.RNK,  RL.PER.RNK, VA.PER.RNK, PV.PER.RNK, RQ.PER.RNK, Year, Country) %>%
   right_join(df_FitchReduced) %>%
